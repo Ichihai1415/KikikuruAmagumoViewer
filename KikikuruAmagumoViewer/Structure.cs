@@ -5,7 +5,7 @@
         /// <summary>
         /// タイル座標
         /// </summary>
-        /// <remarks>デフォルト: (x,y,z)=(13,5,4) X,Y自動変更、イベントハンドラなどはコードを確認して下さい。</remarks>
+        /// <remarks>デフォルト: (x,y,z)=(13,5,4) 値が範囲外の場合無視 X,Y自動変更、イベントハンドラなど各仕様はコードを確認してください。</remarks>
         public class TileCoordinate
         {
             /// <summary>

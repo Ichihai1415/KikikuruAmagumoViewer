@@ -1,17 +1,22 @@
-﻿using static KikikuruAmagumoViewer.Structure;
+﻿using static KikikuruAmagumoViewer.ControlForm;
+using static KikikuruAmagumoViewer.ResourceData;
+using static KikikuruAmagumoViewer.Structure;
 
 namespace KikikuruAmagumoViewer
 {
     public partial class Viewer_Simple : Form
     {
         internal Bitmap? Img = null;
-        internal TileCoordinate coordinate = new() { EnableAutoXYChange = true };//4,6,8,10
+        internal TileCoordinate Coordinate = new() { EnableAutoXYChange = true };//4,6,8,10
+        internal Tile_Map MapName;
 
         public Viewer_Simple()
         {
+            MapName = Tile_Map.JMA_gray_cities;
             InitializeComponent();
+            L_message.MaximumSize = ClientSize;
             MouseWheel += Viewer_MouseWheel;
-            L_message.Text = $"地図データ: 地理院タイル(加工)  tile: {coordinate.Z}/{coordinate.X}/{coordinate.Y}";
+            GetImage();
         }
 
         public Viewer_Simple(Bitmap img)
@@ -22,7 +27,6 @@ namespace KikikuruAmagumoViewer
 
         private void Viewer_Load(object sender, EventArgs e)
         {
-
         }
 
         internal void UpdateImage(Bitmap img)
@@ -31,46 +35,67 @@ namespace KikikuruAmagumoViewer
             PB_Main.Image = Img;
         }
 
+        internal async void GetImage()//todo:z奇数だと画像なかったり
+        {
+            if (MapName == Tile_Map.Null)
+                return;
+            L_message.Text = "取得中...";
+            var img = await GetTileAndData(Coordinate, MapName, Tile_Data.JMA_nowc_hrpns);
+            if (img != null)
+                UpdateImage(img);
+            UpdateMessage();
+        }
 
         private void Viewer_Simple_KeyDown(object sender, KeyEventArgs e)
         {
             switch (e.KeyCode)
             {
                 case Keys.Up:
-                    coordinate.Y--;
+                    Coordinate.Y--;
                     break;
                 case Keys.Down:
-                    coordinate.Y++;
+                    Coordinate.Y++;
                     break;
                 case Keys.Right:
-                    coordinate.X++;
+                    Coordinate.X++;
                     break;
                 case Keys.Left:
-                    coordinate.X--;
+                    Coordinate.X--;
                     break;
                 case Keys.Home:
-                    coordinate = new TileCoordinate(13, 5, 4);
+                    Coordinate = new TileCoordinate(13, 5, 4);
                     break;
             }
-            L_message.Text = $"地図データ: 地理院タイル(加工)  tile: {coordinate.Z}/{coordinate.X}/{coordinate.Y}";
+            GetImage();
         }
 
         private void Viewer_MouseWheel(object? sender, MouseEventArgs e)
         {
             if (e.Delta > 0)
             {
-                if (coordinate.Z >= 14)
+                if (Coordinate.Z >= 14)
                     return;
-                coordinate.Z += 2;
+                Coordinate.Z++;
 
             }
             else
             {
-                if (coordinate.Z <= 4)
+                if (Coordinate.Z <= 4)
                     return;
-                coordinate.Z -= 2;
+                Coordinate.Z--;
             }
-            L_message.Text = $"地図データ: 地理院タイル(加工)  tile: {coordinate.Z}/{coordinate.X}/{coordinate.Y}";
+            GetImage();
+        }
+
+        internal void UpdateMessage()
+        {
+            L_message.Text = $"地図データ: " + MapRights[MapName];//todo:configで付けれるように  tile: {coordinate.Z}/{coordinate.X}/{coordinate.Y}
+
+        }
+
+        private void Viewer_Simple_Resize(object sender, EventArgs e)
+        {
+            L_message.MaximumSize = ClientSize;
         }
     }
 }

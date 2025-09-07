@@ -39,7 +39,7 @@
             PB_Main.Dock = DockStyle.Fill;
             PB_Main.Location = new Point(0, 0);
             PB_Main.Name = "PB_Main";
-            PB_Main.Size = new Size(400, 400);
+            PB_Main.Size = new Size(512, 512);
             PB_Main.SizeMode = PictureBoxSizeMode.Zoom;
             PB_Main.TabIndex = 0;
             PB_Main.TabStop = false;
@@ -58,13 +58,14 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(400, 400);
+            ClientSize = new Size(512, 512);
             Controls.Add(L_message);
             Controls.Add(PB_Main);
             Name = "Viewer_Simple";
             Text = "Viewer.Simple";
             Load += Viewer_Load;
             KeyDown += Viewer_Simple_KeyDown;
+            Resize += Viewer_Simple_Resize;
             ((System.ComponentModel.ISupportInitialize)PB_Main).EndInit();
             ResumeLayout(false);
             PerformLayout();
