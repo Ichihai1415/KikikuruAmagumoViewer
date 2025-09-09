@@ -25,17 +25,8 @@ namespace KikikuruAmagumoViewer
 
         internal async static Task<Bitmap?> GetTileAndData(TileCoordinate tileCoordinate, Tile_Map mapTile, Tile_Data dataTile)
         {
-            var url_map = tileCoordinate.StringReplace(MapURL[mapTile]);
-            var sr_map = await client.GetStreamAsync(url_map);
 
-            // Indexed âÊëúÇíºê⁄ Graphics Ç…ìnÇπÇ»Ç¢ÇÃÇ≈ÉRÉsÅ[
-            using var srcImg = new Bitmap(sr_map);
-            var img = new Bitmap(srcImg.Width, srcImg.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            using (var gTemp = Graphics.FromImage(img))
-            {
-                gTemp.DrawImage(srcImg, 0, 0, srcImg.Width, srcImg.Height);
-            }
-
+            var img = await Utilities.GetMapImage(mapTile, tileCoordinate.TileX, tileCoordinate.TileY, tileCoordinate.TileZ);
             using var g = Graphics.FromImage(img);
 
             var url_data = tileCoordinate.StringReplace(DataURL[dataTile])
