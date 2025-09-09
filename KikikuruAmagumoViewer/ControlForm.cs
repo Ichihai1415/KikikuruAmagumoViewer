@@ -25,10 +25,7 @@ namespace KikikuruAmagumoViewer
 
         internal async static Task<Bitmap?> GetTileAndData(TileCoordinate tileCoordinate, Tile_Map mapTile, Tile_Data dataTile)
         {
-            var url_map = MapURL[mapTile]
-                .Replace("{x}", tileCoordinate.X.ToString())
-                .Replace("{y}", tileCoordinate.Y.ToString())
-                .Replace("{z}", tileCoordinate.Z.ToString());
+            var url_map = tileCoordinate.StringReplace(MapURL[mapTile]);
             var sr_map = await client.GetStreamAsync(url_map);
 
             // Indexed âÊëúÇíºê⁄ Graphics Ç…ìnÇπÇ»Ç¢ÇÃÇ≈ÉRÉsÅ[
@@ -41,11 +38,8 @@ namespace KikikuruAmagumoViewer
 
             using var g = Graphics.FromImage(img);
 
-            var url_data = DataURL[dataTile]
-                .Replace("{x}", tileCoordinate.X.ToString())
-                .Replace("{y}", tileCoordinate.Y.ToString())
-                .Replace("{z}", tileCoordinate.Z.ToString())
-                .Replace("{dateTime}", "20250907060500");
+            var url_data = tileCoordinate.StringReplace(DataURL[dataTile])
+                .Replace("{dateTime}", "20250909080000");
             var sr_data = await client.GetStreamAsync(url_data);
 
             using var overlay = new Bitmap(sr_data);

@@ -1,9 +1,11 @@
-﻿namespace KikikuruAmagumoViewer
+﻿using static KikikuruAmagumoViewer.Converter;
+
+namespace KikikuruAmagumoViewer
 {
     public class Structure
     {
         /// <summary>
-        /// タイル座標
+        /// タイル座標およびタイル画像内のピクセル座標(任意)
         /// </summary>
         /// <remarks>デフォルト: (x,y,z)=(13,5,4) 値が範囲外の場合無視 X,Y自動変更、イベントハンドラなど各仕様はコードを確認してください。</remarks>
         public class TileCoordinate
@@ -16,32 +18,80 @@
             /// <summary>
             /// 指定した値で<see cref="TileCoordinate"/>のインスタンスを初期化します。
             /// </summary>
-            /// <param name="x">X座標</param>
-            /// <param name="y">Y座標</param>
-            /// <param name="z">ズームレベル</param>
-            public TileCoordinate(int x, int y, int z)
+            /// <param name="tileX">X座標</param>
+            /// <param name="tileY">Y座標</param>
+            /// <param name="tileZ">ズームレベル</param>
+            /// <param name="tileSize">タイルサイズ</param>
+            public TileCoordinate(int tileX, int tileY, int tileZ, int tileSize = 256)
             {
-                X = x;
-                Y = y;
-                Z = z;
+                TileX = tileX;
+                TileY = tileY;
+                TileZ = tileZ;
+                TileSize = tileSize;
             }
 
             /// <summary>
-            /// 緯度経度とズームレベルから<see cref="TileCoordinate"/>のインスタンスを初期化します。
+            /// 指定した値で<see cref="TileCoordinate"/>のインスタンスを初期化します。
+            /// </summary>
+            /// <param name="tileX">X座標</param>
+            /// <param name="tileY">Y座標</param>
+            /// <param name="tileZ">ズームレベル</param>
+            /// <param name="pixelX">タイル画像のX座標</param>
+            /// <param name="pixelY">タイル画像のY座標</param>
+            /// <param name="tileSize">タイルサイズ</param>
+            public TileCoordinate(int tileX, int tileY, int tileZ, int pixelX, int pixelY, int tileSize = 256)
+            {
+                TileX = tileX;
+                TileY = tileY;
+                TileZ = tileZ;
+                PixelX = pixelX;
+                PixelY = pixelY;
+                TileSize = tileSize;
+            }
+
+            /// <summary>
+            /// 指定した値で<see cref="TileCoordinate"/>のインスタンスを初期化します。
             /// </summary>
             /// <param name="lat">緯度</param>
             /// <param name="lon">経度</param>
-            /// <param name="zoom">ズームレベル</param>
-            public TileCoordinate(double lat, double lon, int zoom)
+            /// <param name="tileZ">ズームレベル</param>
+            /// <param name="tileSize">タイルサイズ</param>
+            public TileCoordinate(double lat, double lon, int tileZ, int tileSize = 256)
             {
-                X = Converter.Tile.Lon2TileX(lon, zoom);
-                Y = Converter.Tile.Lat2TileY(lat, zoom);
-                Z = zoom;
+                var (tileX, pixelX) = Tile.Lon2TileXPixelX(lon, tileZ, tileSize);
+                var (tileY, pixelY) = Tile.Lat2TileYPixelY(lat, tileZ, tileSize);
+                TileX = tileX;
+                TileY = tileY;
+                TileZ = tileZ;
+                PixelX = pixelX;
+                PixelY = pixelY;
+                TileSize = tileSize;
             }
 
+            /// <summary>
+            /// タイルのX座標
+            /// </summary>
             private int _x = 13;
+
+            /// <summary>
+            /// タイルのY座標
+            /// </summary>
             private int _y = 5;
+
+            /// <summary>
+            /// タイルのZ座標
+            /// </summary>
             private int _z = 4;
+
+            /// <summary>
+            /// タイルの画像のX座標
+            /// </summary>
+            private int? _px;
+
+            /// <summary>
+            /// タイルの画像のY座標
+            /// </summary>
+            private int? _py;
 
             /// <summary>
             /// 値が範囲外の場合<see cref="ArgumentOutOfRangeException"/>を出すか
@@ -61,9 +111,15 @@
             public event EventHandler? ValueChanged;
 
             /// <summary>
-            /// X座標
+            /// タイルサイズ
             /// </summary>
-            public int X
+            /// <remarks>ピクセル計算時に使用します</remarks>
+            public int TileSize = 256;
+
+            /// <summary>
+            /// タイルのX座標
+            /// </summary>
+            public int TileX
             {
                 get => _x;
                 set
@@ -80,9 +136,9 @@
             }
 
             /// <summary>
-            /// Y座標
+            /// タイルのY座標
             /// </summary>
-            public int Y
+            public int TileY
             {
                 get => _y;
                 set
@@ -99,10 +155,10 @@
             }
 
             /// <summary>
-            /// ズームレベル  
+            /// タイルのズームレベル  
             /// </summary>
             /// <remarks><see cref="EnableAutoXYChange"/>が<see cref="true"/>の場合、X,Y座標が自動で変換されます。</remarks>
-            public int Z
+            public int TileZ
             {
                 get => _z;
                 set
@@ -126,6 +182,42 @@
                         }
                     if (_z != value)
                         OnValueChanged(3, value);
+                }
+            }
+
+            /// <summary>
+            /// タイルの画像のX座標
+            /// </summary>
+            public int? PixelX
+            {
+                get => _px;
+                set
+                {
+                    if (value < 0 || value >= TileSize)
+                    {
+                        if (EnableOutOfRangeException)
+                            throw new ArgumentOutOfRangeException(nameof(value), $"PixelX must be between 0 and {TileSize - 1}.");
+                        return;
+                    }
+                    _px = value;
+                }
+            }
+
+            /// <summary>
+            /// タイルの画像のY座標
+            /// </summary>
+            public int? PixelY
+            {
+                get => _py;
+                set
+                {
+                    if (value < 0 || value >= TileSize)
+                    {
+                        if (EnableOutOfRangeException)
+                            throw new ArgumentOutOfRangeException(nameof(value), $"PixelY must be between 0 and {TileSize - 1}.");
+                        return;
+                    }
+                    _py = value;
                 }
             }
 
@@ -154,10 +246,44 @@
                 ValueChanged?.Invoke(this, EventArgs.Empty);
             }
 
-            public override string ToString()
-            {
-                return $"{Z}/{X}/{Y}";
-            }
+            /// <inheritdoc/>
+            /// <remarks>format: <c>$"[tile: x={TileX},y={TileY},z={TileZ} / pixel: x={PixelX},y={PixelY},size={TileSize}]"</c></remarks>
+            public override string ToString() => $"[tile: x={TileX},y={TileY},z={TileZ} / pixel: x={PixelX},y={PixelY},size={TileSize}]";
+
+            /// <summary>
+            /// URLなど用に<c>Z/X/Y</c>形式で文字列を返します。
+            /// </summary>
+            /// <returns><c>Z/X/Y</c>形式の文字列</returns>
+            public string ToString_TileZXY() => $"{TileZ}/{TileX}/{TileY}";
+
+            /// <summary>
+            /// URLなど用に<c>X/Y/Z</c>形式で文字列を返します。
+            /// </summary>
+            /// <returns><c>X/Y/Z</c>形式の文字列</returns>
+            public string ToString_TileXYZ() => $"{TileX}/{TileY}/{TileZ}";
+
+            /// <summary>
+            /// 指定されたテキストの特定部分をオブジェクトの値に置換します。
+            /// </summary>
+            /// <remarks>tile: <c>{x}</c>,<c>{y}</c>,<c>{z}</c> pixel: <c>{px}</c>,<c>{py}</c></remarks>
+            /// <param name="text">置換する/された文字</param>
+            public string StringReplace(string text) =>
+               text.Replace("{x}", TileX.ToString())
+                          .Replace("{y}", TileY.ToString())
+                          .Replace("{z}", TileZ.ToString())
+                          .Replace("{px}", PixelX.ToString())
+                          .Replace("{py}", PixelY.ToString());
+
+            /// <summary>
+            /// 指定されたテキストの特定部分をオブジェクトの値に置換します。
+            /// </summary>
+            /// <remarks>tile: <c>{x}</c>,<c>{y}</c>,<c>{z}</c> pixel: <c>{px}</c>,<c>{py}</c></remarks>
+            /// <param name="text">置換する文字列</param>
+            /// <returns>置換された文字列</returns>
+            public void StringReplace(ref string text) => text = StringReplace(text);
+
         }
+
+
     }
 }

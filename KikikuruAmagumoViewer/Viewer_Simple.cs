@@ -46,21 +46,22 @@ namespace KikikuruAmagumoViewer
             UpdateMessage();
         }
 
+        // 修正内容: TileCoordinate の必須プロパティ (TileX, TileY, TileZ) をオブジェクト初期化子で設定するよう修正
         private void Viewer_Simple_KeyDown(object sender, KeyEventArgs e)
         {
             switch (e.KeyCode)
             {
                 case Keys.Up:
-                    Coordinate.Y--;
+                    Coordinate.TileY--;
                     break;
                 case Keys.Down:
-                    Coordinate.Y++;
+                    Coordinate.TileY++;
                     break;
                 case Keys.Right:
-                    Coordinate.X++;
+                    Coordinate.TileX++;
                     break;
                 case Keys.Left:
-                    Coordinate.X--;
+                    Coordinate.TileX--;
                     break;
                 case Keys.Home:
                     Coordinate = new TileCoordinate(13, 5, 4);
@@ -73,16 +74,16 @@ namespace KikikuruAmagumoViewer
         {
             if (e.Delta > 0)
             {
-                if (Coordinate.Z >= 14)
+                if (Coordinate.TileZ >= 14)
                     return;
-                Coordinate.Z++;
+                Coordinate.TileZ++;
 
             }
             else
             {
-                if (Coordinate.Z <= 4)
+                if (Coordinate.TileZ <= 4)
                     return;
-                Coordinate.Z--;
+                Coordinate.TileZ--;
             }
             GetImage();
         }
